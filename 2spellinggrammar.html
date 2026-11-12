@@ -1,0 +1,824 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>HSK 2 Lesson 1 Text 2 - Dictation, Speech & Grammar Practice</title>
+    <!-- Tailwind CSS CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Canvas Confetti -->
+    <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
+    <!-- Font Awesome Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+SC:wght@400;500;700&family=Roboto:wght@400;500;700&display=swap" rel="stylesheet">
+
+    <style>
+        :root {
+            /* HSK 2 Orange Aesthetic Theme */
+            --primary-color: #f58220;
+            --primary-dark: #d96b0c;
+            --primary-light: #fff3e6;
+            --bg-color: #f8faf9;
+            --border-warm: #ffe0b2;
+        }
+
+        body {
+            font-family: 'Noto Sans SC', 'Roboto', sans-serif;
+            background-color: var(--bg-color);
+            color: #2c3e50;
+            user-select: none;
+        }
+
+        .hsk-orange {
+            background-color: var(--primary-color);
+        }
+        .hsk-orange-hover:hover {
+            background-color: var(--primary-dark);
+        }
+        .hsk-orange-dark {
+            background-color: var(--primary-dark);
+        }
+        .hsk-orange-light {
+            background-color: var(--primary-light);
+        }
+
+        .page {
+            display: none;
+            opacity: 0;
+            transition: opacity 0.3s ease-in-out;
+        }
+        .page.active {
+            display: block;
+            opacity: 1;
+        }
+
+        /* Canvas Touch Action */
+        #handwritingCanvas {
+            touch-action: none;
+            cursor: crosshair;
+        }
+
+        /* Recording pulse */
+        .recording-pulse {
+            animation: pulse-ring 1.25s cubic-bezier(0.215, 0.61, 0.355, 1) infinite;
+        }
+        @keyframes pulse-ring {
+            0% { transform: scale(0.95); box-shadow: 0 0 0 0 rgba(239, 68, 68, 0.7); }
+            70% { transform: scale(1); box-shadow: 0 0 0 10px rgba(239, 68, 68, 0); }
+            100% { transform: scale(0.95); box-shadow: 0 0 0 0 rgba(239, 68, 68, 0); }
+        }
+    </style>
+</head>
+<body class="min-h-screen flex flex-col justify-between pb-12">
+
+    <!-- Container -->
+    <div class="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 pt-6 w-full flex-grow">
+
+        <!-- Top Header Navigation -->
+        <div class="hsk-orange rounded-2xl p-4 sm:p-5 text-white shadow-md mb-6 flex flex-col md:flex-row justify-between items-center gap-4">
+            <div class="flex items-center gap-3">
+                <span class="bg-white/25 text-white text-xs sm:text-sm font-bold px-3 py-1 rounded-full">HSK 2 · 第1课</span>
+                <h1 class="text-xl sm:text-2xl font-bold tracking-wide">课文2 互动拓展练习</h1>
+            </div>
+
+            <!-- Tabs -->
+            <div class="flex gap-2 bg-black/10 p-1.5 rounded-xl w-full md:w-auto overflow-x-auto justify-center">
+                <button onclick="switchTab(1)" id="tab1" class="tab-btn px-4 py-2 rounded-lg font-bold text-xs sm:text-sm transition bg-white text-orange-700 shadow-sm whitespace-nowrap">
+                    1. 听写练习 (Canvas)
+                </button>
+                <button onclick="switchTab(2)" id="tab2" class="tab-btn px-4 py-2 rounded-lg font-bold text-xs sm:text-sm transition text-white hover:bg-white/15 whitespace-nowrap">
+                    2. 重点句阅读与回放
+                </button>
+                <button onclick="switchTab(3)" id="tab3" class="tab-btn px-4 py-2 rounded-lg font-bold text-xs sm:text-sm transition text-white hover:bg-white/15 whitespace-nowrap">
+                    3. 语法“是……的”句练习
+                </button>
+            </div>
+        </div>
+
+        <!-- ========================================== -->
+        <!-- PAGE 1: DICTATION & CANVAS PRACTICE        -->
+        <!-- ========================================== -->
+        <div id="page1" class="page active">
+            <div class="bg-white rounded-3xl p-6 sm:p-8 shadow-sm border border-orange-100 mb-6">
+                <div class="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 mb-6 border-b border-orange-100 pb-4">
+                    <div>
+                        <h2 class="text-2xl font-bold text-gray-800">✍️ 生词随机听写与手写练习</h2>
+                        <p class="text-sm text-gray-500 mt-1">系统将随机播放语音出题，请在下方的田字格中在线手写词语，15秒后自动显示答案进行自我检查。</p>
+                    </div>
+                    <div class="flex items-center gap-3 flex-wrap">
+                        <span class="text-sm text-gray-600 bg-orange-50 px-3 py-1.5 rounded-xl border border-orange-100">
+                            随机进度: <strong id="completedCount" class="text-orange-600 font-bold">0</strong> / <span id="totalWordsCount">2</span>
+                        </span>
+                        <button onclick="playDictationAudio()" class="px-4 py-2 bg-amber-300 hover:bg-amber-200 text-orange-950 font-bold rounded-xl text-sm transition flex items-center gap-2 shadow-sm">
+                            <i class="fa-solid fa-volume-high"></i> 重新播放语音
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Timer Progress -->
+                <div class="mb-6">
+                    <div class="flex justify-between text-xs text-gray-500 font-bold mb-1">
+                        <span>剩余思考与书写时间</span>
+                        <span id="timerText" class="text-orange-600 font-mono text-sm">15s</span>
+                    </div>
+                    <div class="w-full bg-orange-100/70 h-2.5 rounded-full overflow-hidden">
+                        <div id="timerBar" class="hsk-orange h-full w-full transition-all duration-1000"></div>
+                    </div>
+                </div>
+
+                <div class="grid grid-cols-1 md:grid-cols-12 gap-6 items-stretch">
+                    <!-- Handwriting Canvas -->
+                    <div class="md:col-span-8 flex flex-col items-center">
+                        <div class="w-full h-72 sm:h-80 bg-orange-50/40 rounded-2xl border-2 border-dashed border-orange-300 relative overflow-hidden flex items-center justify-center">
+                            <!-- Tianzige background lines -->
+                            <div class="absolute inset-0 pointer-events-none opacity-25 flex">
+                                <div class="w-1/2 border-r-2 border-dashed border-orange-500"></div>
+                                <div class="w-1/2"></div>
+                            </div>
+                            <div class="absolute inset-0 pointer-events-none opacity-25 flex flex-col">
+                                <div class="h-1/2 border-b-2 border-dashed border-orange-500"></div>
+                                <div class="h-1/2"></div>
+                            </div>
+                            <canvas id="handwritingCanvas" class="w-full h-full relative z-10"></canvas>
+                        </div>
+
+                        <div class="flex justify-between w-full mt-4 gap-3">
+                            <button onclick="clearCanvas()" class="px-4 py-2 bg-gray-100 hover:bg-gray-200 text-gray-700 font-medium rounded-xl text-sm transition">
+                                <i class="fa-solid fa-eraser"></i> 清除画布 / Clear
+                            </button>
+                            <button onclick="revealAnswerNow()" class="px-4 py-2 bg-orange-100 hover:bg-orange-200 text-orange-800 font-bold rounded-xl text-sm transition">
+                                <i class="fa-solid fa-eye"></i> 提前看答案
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- Answer Reveal Slot -->
+                    <div class="md:col-span-4 flex flex-col justify-between">
+                        <div id="answerRevealBox" class="min-h-[180px] flex flex-col items-center justify-center p-4 rounded-xl border border-orange-200 bg-orange-50/20 text-center transition-all">
+                            <div class="text-gray-400 text-sm italic">
+                                <i class="fa-solid fa-hourglass-half text-orange-500 text-xl mb-2 block"></i>
+                                15秒倒计时结束后<br>在此自动显示答案...
+                            </div>
+                        </div>
+
+                        <button onclick="nextDictationWord()" class="w-full py-3 hsk-orange hsk-orange-hover text-white font-bold rounded-xl shadow-md transition mt-4 flex items-center justify-center gap-2">
+                            下一题 (随机抽取) <i class="fa-solid fa-shuffle"></i>
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- ========================================== -->
+        <!-- PAGE 2: SENTENCE READING & RECORDING       -->
+        <!-- ========================================== -->
+        <div id="page2" class="page">
+            <div class="bg-white rounded-3xl p-6 sm:p-8 shadow-sm border border-orange-100 mb-6">
+                <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-6 border-b border-orange-100 pb-4">
+                    <div>
+                        <h2 class="text-2xl font-bold text-gray-800">📖 课文二重点句子阅读与录音对比</h2>
+                        <p class="text-sm text-gray-500 mt-1">播放课文示范发音朗读句子，点击录音按钮录下自己的发音并听录音回放。</p>
+                    </div>
+                    <button onclick="speakAllSentences()" class="px-4 py-2 bg-orange-100 hover:bg-orange-200 text-orange-800 font-bold rounded-xl text-xs sm:text-sm transition flex items-center gap-2 shrink-0">
+                        <i class="fa-solid fa-headphones"></i> 朗读全段对话
+                    </button>
+                </div>
+
+                <!-- Dynamic Sentence List Container -->
+                <div id="sentenceListContainer" class="space-y-4"></div>
+            </div>
+        </div>
+
+        <!-- ========================================== -->
+        <!-- PAGE 3: Grammar "是……的" Sentence          -->
+        <!-- ========================================== -->
+        <div id="page3" class="page">
+                
+            <!-- Grammar Explanation Card (Xiaoyu's Classroom Style) -->
+            <div class="bg-white rounded-3xl p-6 sm:p-8 shadow-sm border border-orange-100 mb-6">
+                
+                <!-- Xiaoyu's Classroom Banner Header -->
+                <div class="flex items-center gap-3 border-b-2 border-orange-400 pb-3 mb-6">
+                    <div class="w-12 h-12 rounded-full hsk-orange text-white flex items-center justify-center text-xl font-bold shadow-sm">
+                        <i class="fa-solid fa-chalkboard-user"></i>
+                    </div>
+                    <div>
+                        <div class="text-xs font-bold text-orange-600 tracking-wide uppercase">Xiaoyu's Classroom</div>
+                        <h2 class="text-2xl font-bold text-gray-800">小语讲堂 —— “是……的”句 “是……的” Sentence</h2>
+                    </div>
+                </div>
+
+                <!-- Explanation Box -->
+                <div class="hsk-orange-light rounded-2xl p-5 mb-6 border border-orange-200 text-gray-800 leading-relaxed">
+                    <p class="text-base sm:text-lg font-medium mb-2">
+                        “是……的”句用来强调事情发生的时间、地点、方式、动作者、目的等。肯定句和疑问句中可以省略“是”，否定句中不能省略“是”。例如：
+                    </p>
+                    <p class="text-xs sm:text-sm text-gray-600 italic">
+                        The “是……的” sentence can be used to emphasize the time, place, manner, agent, purpose, etc., of an event. In affirmative and interrogative sentences, “是” can be omitted, but it cannot be omitted in negative sentences. For example:
+                    </p>
+                </div>
+
+                <!-- Example Sentences -->
+                <div class="bg-orange-50/40 rounded-2xl p-5 border border-orange-200 mb-8 space-y-3">
+                    <div class="font-bold text-orange-800 text-sm mb-1 flex items-center gap-2">
+                        <i class="fa-solid fa-bookmark text-orange-500"></i> 例句 Example Sentences:
+                    </div>
+                    <div class="text-base text-gray-800 pl-4 border-l-4 border-orange-400 flex items-center justify-between gap-2">
+                        <span>(1) 我们<strong class="text-orange-700 font-bold underline">是</strong>来旅游<strong class="text-orange-700 font-bold underline">的</strong>。</span>
+                        <button onclick="speak('我们是来旅游的。')" class="text-orange-600 hover:text-orange-800 text-sm px-2 py-1 rounded-lg hover:bg-orange-100 transition"><i class="fa-solid fa-volume-high"></i></button>
+                    </div>
+                    <div class="text-base text-gray-800 pl-4 border-l-4 border-orange-400 flex items-center justify-between gap-2">
+                        <span>(2) 苹果在哪儿买<strong class="text-orange-700 font-bold underline">的</strong>？</span>
+                        <button onclick="speak('苹果在哪儿买的？')" class="text-orange-600 hover:text-orange-800 text-sm px-2 py-1 rounded-lg hover:bg-orange-100 transition"><i class="fa-solid fa-volume-high"></i></button>
+                    </div>
+                    <div class="text-base text-gray-800 pl-4 border-l-4 border-orange-400 flex items-center justify-between gap-2">
+                        <span>(3) 我们不<strong class="text-orange-700 font-bold underline">是</strong>坐出租车去<strong class="text-orange-700 font-bold underline">的</strong>。</span>
+                        <button onclick="speak('我们不是坐出租车去的。')" class="text-orange-600 hover:text-orange-800 text-sm px-2 py-1 rounded-lg hover:bg-orange-100 transition"><i class="fa-solid fa-volume-high"></i></button>
+                    </div>
+                </div>
+
+                <!-- Interactive Grammar Dialogues Exercise Box -->
+                <div class="hsk-orange rounded-3xl p-6 sm:p-8 text-white shadow-md">
+                    <h3 class="text-xl sm:text-2xl font-bold mb-2 flex items-center gap-2">
+                        <i class="fa-solid fa-pen-to-square"></i> 完成对话。 Complete the dialogues.
+                    </h3>
+                    <p class="text-xs sm:text-sm text-white/90 mb-6 italic">
+                        请使用“是……的”句式完成下列对话（可打字或点击右侧🎤语音输入）：
+                    </p>
+
+                    <div class="space-y-6" id="grammarExerciseContainer">
+                        
+                        <!-- Exercise 1 -->
+                        <div class="bg-white/15 rounded-2xl p-5 border border-white/25">
+                            <div class="flex flex-col gap-3">
+                                <div class="text-white font-bold text-base sm:text-lg">
+                                    (1) A: 你是坐车来学校的吗？
+                                </div>
+                                <div class="flex flex-col sm:flex-row items-stretch sm:items-center gap-2 flex-wrap pl-0 sm:pl-7">
+                                    <span class="font-bold text-white text-base sm:text-lg shrink-0">B:</span>
+                                    <div class="relative flex-1 min-w-[220px]">
+                                        <input type="text" id="gInput1" placeholder="点击打字或使用语音输入（如：是的，我是坐车来的）..." class="w-full bg-white text-gray-800 px-4 py-2.5 rounded-xl pr-10 text-base focus:outline-none focus:ring-2 focus:ring-amber-300">
+                                        <button onclick="startVoiceInputForField('gInput1', 'micIcon1')" class="absolute right-2 top-1/2 -translate-y-1/2 text-orange-600 hover:text-orange-800 p-1.5" title="语音输入">
+                                            <i id="micIcon1" class="fa-solid fa-microphone text-lg"></i>
+                                        </button>
+                                    </div>
+                                    <span class="font-bold text-white text-base sm:text-lg shrink-0">。</span>
+                                    <button onclick="toggleReferenceAnswer(1)" class="px-4 py-2 bg-amber-300 hover:bg-amber-200 text-orange-950 font-bold rounded-xl text-sm transition shrink-0 ml-auto shadow-sm">
+                                        参考答案
+                                    </button>
+                                </div>
+                            </div>
+                            <div id="refAns1" class="hidden mt-3 p-3 bg-black/20 rounded-xl text-amber-200 text-sm font-medium">
+                                💡 参考答案：是的，我是坐车来的 / 不是，我是走路来的
+                            </div>
+                        </div>
+
+                        <!-- Exercise 2 -->
+                        <div class="bg-white/15 rounded-2xl p-5 border border-white/25">
+                            <div class="flex flex-col gap-3">
+                                <div class="text-white font-bold text-base sm:text-lg">
+                                    (2) A: 你今天是几点到学校的？
+                                </div>
+                                <div class="flex flex-col sm:flex-row items-stretch sm:items-center gap-2 flex-wrap pl-0 sm:pl-7">
+                                    <span class="font-bold text-white text-base sm:text-lg shrink-0">B:</span>
+                                    <div class="relative flex-1 min-w-[220px]">
+                                        <input type="text" id="gInput2" placeholder="点击打字或使用语音输入（如：我是八点到学校的）..." class="w-full bg-white text-gray-800 px-4 py-2.5 rounded-xl pr-10 text-base focus:outline-none focus:ring-2 focus:ring-amber-300">
+                                        <button onclick="startVoiceInputForField('gInput2', 'micIcon2')" class="absolute right-2 top-1/2 -translate-y-1/2 text-orange-600 hover:text-orange-800 p-1.5" title="语音输入">
+                                            <i id="micIcon2" class="fa-solid fa-microphone text-lg"></i>
+                                        </button>
+                                    </div>
+                                    <span class="font-bold text-white text-base sm:text-lg shrink-0">。</span>
+                                    <button onclick="toggleReferenceAnswer(2)" class="px-4 py-2 bg-amber-300 hover:bg-amber-200 text-orange-950 font-bold rounded-xl text-sm transition shrink-0 ml-auto shadow-sm">
+                                        参考答案
+                                    </button>
+                                </div>
+                            </div>
+                            <div id="refAns2" class="hidden mt-3 p-3 bg-black/20 rounded-xl text-amber-200 text-sm font-medium">
+                                💡 参考答案：我是八点到学校的 / 我是早上七点半到的
+                            </div>
+                        </div>
+
+                        <!-- Exercise 3 -->
+                        <div class="bg-white/15 rounded-2xl p-5 border border-white/25">
+                            <div class="flex flex-col gap-3">
+                                <div class="flex flex-col sm:flex-row items-stretch sm:items-center gap-2 flex-wrap">
+                                    <span class="font-bold text-white text-base sm:text-lg shrink-0">(3) A:</span>
+                                    <div class="relative flex-1 min-w-[220px]">
+                                        <input type="text" id="gInput3" placeholder="点击打字或使用语音输入（如：你是在哪儿看见安妮的）..." class="w-full bg-white text-gray-800 px-4 py-2.5 rounded-xl pr-10 text-base focus:outline-none focus:ring-2 focus:ring-amber-300">
+                                        <button onclick="startVoiceInputForField('gInput3', 'micIcon3')" class="absolute right-2 top-1/2 -translate-y-1/2 text-orange-600 hover:text-orange-800 p-1.5" title="语音输入">
+                                            <i id="micIcon3" class="fa-solid fa-microphone text-lg"></i>
+                                        </button>
+                                    </div>
+                                    <span class="font-bold text-white text-base sm:text-lg shrink-0">？</span>
+                                    <button onclick="toggleReferenceAnswer(3)" class="px-4 py-2 bg-amber-300 hover:bg-amber-200 text-orange-950 font-bold rounded-xl text-sm transition shrink-0 ml-auto shadow-sm">
+                                        参考答案
+                                    </button>
+                                </div>
+                                <div class="text-white/95 text-base sm:text-lg pl-0 sm:pl-7 font-medium">
+                                    B: 我是在书店看见安妮的。
+                                </div>
+                            </div>
+                            <div id="refAns3" class="hidden mt-3 p-3 bg-black/20 rounded-xl text-amber-200 text-sm font-medium">
+                                💡 参考答案：你是在哪儿看见安妮的 / 你在哪儿看见安妮的
+                            </div>
+                        </div>
+
+                    </div>
+
+                    <div class="mt-8 flex justify-end">
+                        <button onclick="checkGrammarExercises()" class="px-8 py-3.5 bg-amber-300 hover:bg-amber-200 text-orange-950 font-bold rounded-2xl shadow-lg transition text-base flex items-center gap-2">
+                            <i class="fa-solid fa-circle-check text-lg"></i> 检查答案 / Check Answers
+                        </button>
+                    </div>
+
+                </div>
+
+            </div>
+
+        </div>
+
+    </div>
+
+    <!-- Custom Result Modal -->
+    <div id="resultModal" class="fixed inset-0 bg-black/40 backdrop-blur-sm flex items-center justify-center p-4 z-50 hidden opacity-0 transition-opacity duration-300">
+        <div class="bg-white rounded-3xl p-6 sm:p-8 max-w-md w-full text-center shadow-2xl transform scale-95 transition-transform duration-300" id="modalCard">
+            <div id="modalIcon" class="w-16 h-16 rounded-full flex items-center justify-center mx-auto mb-4 text-3xl"></div>
+            <h3 id="modalTitle" class="text-2xl font-bold text-gray-800 mb-2"></h3>
+            <p id="modalMessage" class="text-gray-600 mb-6 leading-relaxed"></p>
+            <button onclick="closeModal()" class="w-full py-3 hsk-orange hsk-orange-hover text-white font-bold rounded-xl shadow-md transition">
+                确定 / Continue
+            </button>
+        </div>
+    </div>
+
+    <script>
+        // Data Definitions (From Image 1 & Image 2 - HSK 2 Lesson 1 Text 2)
+        const dictationWords = [
+            { word: "次", pinyin: "cì", pos: "m.", english: "(indicating how many times or which time something happens) time; occurrence" },
+            { word: "旅游", pinyin: "lǚyóu", pos: "v.", english: "travel; make a tour" }
+        ];
+
+        const practiceSentences = [
+            {
+                speaker: "王一雪",
+                text: "你们是第一次来北京吗？",
+                pinyin: "Nǐmen shì dì-yī cì lái Běijīng ma?"
+            },
+            {
+                speaker: "白家月",
+                text: "是的，我们都是第一次来。",
+                pinyin: "Shì de, wǒmen dōu shì dì-yī cì lái."
+            },
+            {
+                speaker: "王一雪",
+                text: "你们是来学中文的吗？",
+                pinyin: "Nǐmen shì lái xué Zhōngwén de ma?"
+            },
+            {
+                speaker: "安妮",
+                text: "不是，我们是来旅游的。",
+                pinyin: "Bú shì, wǒmen shì lái lǚyóu de."
+            },
+            {
+                speaker: "王一雪",
+                text: "我这几天都不忙，你们有事就找我。",
+                pinyin: "Wǒ zhè jǐ tiān dōu bù máng, nǐmen yǒu shì jiù zhǎo wǒ."
+            }
+        ];
+
+        // Dictation State (Random Shuffle Queue)
+        let shuffledIndices = [];
+        let queuePointer = 0;
+        let timerInterval = null;
+        let timeLeft = 15;
+        let completedCount = 0;
+        let currentWordRevealed = false;
+
+        // Canvas State
+        let canvas, ctx;
+        let isDrawing = false;
+
+        // Recording State
+        let mediaRecorder;
+        let audioChunks = [];
+        let recordedAudioUrls = {}; // Key: sentence index
+        let isRecordingSentence = {};
+
+        // Web Speech API Synthesis
+        const synth = window.speechSynthesis;
+
+        function speak(text) {
+            if (!synth) return;
+            synth.cancel();
+            const utterance = new SpeechSynthesisUtterance(text);
+            utterance.lang = 'zh-CN';
+            utterance.rate = 0.85;
+            synth.speak(utterance);
+        }
+
+        function speakAllSentences() {
+            const fullText = practiceSentences.map(s => s.text).join(" ");
+            speak(fullText);
+        }
+
+        // Tab Navigation
+        function switchTab(tabNum) {
+            document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+            document.querySelectorAll('.tab-btn').forEach(b => {
+                b.className = "tab-btn px-4 py-2 rounded-lg font-bold text-xs sm:text-sm transition text-white hover:bg-white/15 whitespace-nowrap";
+            });
+
+            document.getElementById(`page${tabNum}`).classList.add('active');
+            const activeBtn = document.getElementById(`tab${tabNum}`);
+            activeBtn.className = "tab-btn px-4 py-2 rounded-lg font-bold text-xs sm:text-sm transition bg-white text-orange-700 shadow-sm whitespace-nowrap";
+
+            if (tabNum === 1) {
+                if (!canvas) {
+                    initCanvas();
+                } else {
+                    resizeCanvasPreserve();
+                }
+            }
+        }
+
+        // --- PAGE 1: RANDOM DICTATION & CANVAS LOGIC ---
+        function generateShuffledQueue() {
+            const indices = dictationWords.map((_, i) => i);
+            for (let i = indices.length - 1; i > 0; i--) {
+                const j = Math.floor(Math.random() * (i + 1));
+                [indices[i], indices[j]] = [indices[j], indices[i]];
+            }
+            // Avoid immediate repeat across rounds when possible
+            if (shuffledIndices.length > 0 && indices[0] === shuffledIndices[shuffledIndices.length - 1] && indices.length > 1) {
+                [indices[0], indices[1]] = [indices[1], indices[0]];
+            }
+            shuffledIndices = indices;
+            queuePointer = 0;
+        }
+
+        function getCurrentWordObj() {
+            if (shuffledIndices.length === 0) generateShuffledQueue();
+            return dictationWords[shuffledIndices[queuePointer]];
+        }
+
+        function initCanvas() {
+            canvas = document.getElementById('handwritingCanvas');
+            const container = canvas.parentElement;
+            canvas.width = container.clientWidth;
+            canvas.height = container.clientHeight;
+
+            ctx = canvas.getContext('2d');
+            ctx.lineWidth = 6;
+            ctx.lineCap = 'round';
+            ctx.lineJoin = 'round';
+            ctx.strokeStyle = '#2c3e50';
+
+            // Mouse events
+            canvas.addEventListener('mousedown', startDrawing);
+            canvas.addEventListener('mousemove', draw);
+            canvas.addEventListener('mouseup', stopDrawing);
+            canvas.addEventListener('mouseleave', stopDrawing);
+
+            // Touch events
+            canvas.addEventListener('touchstart', (e) => {
+                e.preventDefault();
+                const touch = e.touches[0];
+                startDrawing({ clientX: touch.clientX, clientY: touch.clientY });
+            }, { passive: false });
+            canvas.addEventListener('touchmove', (e) => {
+                e.preventDefault();
+                const touch = e.touches[0];
+                draw({ clientX: touch.clientX, clientY: touch.clientY });
+            }, { passive: false });
+            canvas.addEventListener('touchend', stopDrawing);
+
+            document.getElementById('totalWordsCount').innerText = dictationWords.length;
+            generateShuffledQueue();
+            startDictationTimer();
+        }
+
+        function resizeCanvasPreserve() {
+            if (!canvas) return;
+            const container = canvas.parentElement;
+            if (container.clientWidth > 0 && canvas.width !== container.clientWidth) {
+                canvas.width = container.clientWidth;
+                canvas.height = container.clientHeight;
+                ctx.lineWidth = 6;
+                ctx.lineCap = 'round';
+                ctx.lineJoin = 'round';
+                ctx.strokeStyle = '#2c3e50';
+            }
+        }
+
+        function startDrawing(e) {
+            isDrawing = true;
+            const rect = canvas.getBoundingClientRect();
+            ctx.beginPath();
+            ctx.moveTo(e.clientX - rect.left, e.clientY - rect.top);
+        }
+
+        function draw(e) {
+            if (!isDrawing) return;
+            const rect = canvas.getBoundingClientRect();
+            ctx.lineTo(e.clientX - rect.left, e.clientY - rect.top);
+            ctx.stroke();
+        }
+
+        function stopDrawing() {
+            isDrawing = false;
+        }
+
+        function clearCanvas() {
+            if (ctx && canvas) {
+                ctx.clearRect(0, 0, canvas.width, canvas.height);
+            }
+        }
+
+        function playDictationAudio() {
+            const wordObj = getCurrentWordObj();
+            speak(wordObj.word);
+        }
+
+        function startDictationTimer() {
+            clearInterval(timerInterval);
+            timeLeft = 15;
+            currentWordRevealed = false;
+            updateTimerUI();
+
+            // Auto play audio at start of random question
+            playDictationAudio();
+
+            timerInterval = setInterval(() => {
+                timeLeft--;
+                updateTimerUI();
+                if (timeLeft <= 0) {
+                    clearInterval(timerInterval);
+                    revealAnswerNow();
+                }
+            }, 1000);
+        }
+
+        function updateTimerUI() {
+            document.getElementById('timerText').innerText = `${timeLeft}s`;
+            const pct = (timeLeft / 15) * 100;
+            document.getElementById('timerBar').style.width = `${pct}%`;
+        }
+
+        function revealAnswerNow() {
+            clearInterval(timerInterval);
+            if (!currentWordRevealed) {
+                currentWordRevealed = true;
+                completedCount++;
+                document.getElementById('completedCount').innerText = completedCount;
+            }
+
+            const wordObj = getCurrentWordObj();
+            const answerBox = document.getElementById('answerRevealBox');
+
+            answerBox.className = "min-h-[180px] flex flex-col items-center justify-center p-4 rounded-xl border-2 border-orange-500 bg-orange-50 text-center transition-all";
+            answerBox.innerHTML = `
+                <div class="text-xs font-bold text-orange-600 mb-1">正确答案 (自我核对)：</div>
+                <div class="text-5xl font-bold text-gray-800 tracking-wider my-1">${wordObj.word}</div>
+                <div class="text-base font-mono text-orange-700 font-bold mb-1">${wordObj.pinyin} <span class="text-xs font-normal text-gray-500">(${wordObj.pos})</span></div>
+                <div class="text-xs text-gray-600 italic leading-snug">${wordObj.english}</div>
+            `;
+        }
+
+        function nextDictationWord() {
+            queuePointer++;
+            if (queuePointer >= shuffledIndices.length) {
+                generateShuffledQueue();
+            }
+            clearCanvas();
+
+            // Reset Answer box
+            const answerBox = document.getElementById('answerRevealBox');
+            answerBox.className = "min-h-[180px] flex flex-col items-center justify-center p-4 rounded-xl border border-orange-200 bg-orange-50/20 text-center transition-all";
+            answerBox.innerHTML = `
+                <div class="text-gray-400 text-sm italic">
+                    <i class="fa-solid fa-hourglass-half text-orange-500 text-xl mb-2 block"></i>
+                    15秒倒计时结束后<br>在此自动显示答案...
+                </div>
+            `;
+
+            startDictationTimer();
+        }
+
+
+        // --- PAGE 2: SENTENCE READING & RECORDING LOGIC ---
+        function renderSentenceList() {
+            const container = document.getElementById('sentenceListContainer');
+            container.innerHTML = '';
+
+            practiceSentences.forEach((item, idx) => {
+                const card = document.createElement('div');
+                card.className = "p-5 rounded-2xl border border-orange-100 bg-orange-50/30 hover:bg-white hover:shadow-md transition flex flex-col gap-4";
+                
+                card.innerHTML = `
+                    <div class="flex items-start justify-between gap-4">
+                        <div>
+                            <div class="flex items-center gap-2 mb-1">
+                                <span class="text-xs font-bold px-2.5 py-0.5 rounded-full bg-orange-100 text-orange-800">${item.speaker}</span>
+                                <span class="text-xs text-gray-400 font-mono">${item.pinyin}</span>
+                            </div>
+                            <div class="text-base sm:text-lg font-bold text-gray-800 leading-snug">
+                                <span class="text-orange-600 font-bold mr-1">(${idx + 1})</span> ${item.text}
+                            </div>
+                        </div>
+                        <button onclick="speak('${item.text}')" class="px-3.5 py-1.5 bg-orange-100 hover:bg-orange-200 text-orange-800 font-bold rounded-xl text-xs flex items-center gap-1.5 transition whitespace-nowrap shrink-0">
+                            <i class="fa-solid fa-volume-high"></i> 示范发音
+                        </button>
+                    </div>
+
+                    <div class="flex flex-wrap items-center justify-between gap-3 pt-3 border-t border-orange-100">
+                        <div class="flex items-center gap-2">
+                            <button onclick="toggleSentenceRecording(${idx})" id="recBtn_${idx}" class="px-4 py-2 bg-rose-500 hover:bg-rose-600 text-white font-bold rounded-xl text-xs sm:text-sm shadow-sm transition flex items-center gap-2">
+                                <i class="fa-solid fa-microphone"></i> 🎤 开始录音
+                            </button>
+                            <span id="recStatus_${idx}" class="text-xs text-gray-400 italic">未录制</span>
+                        </div>
+
+                        <!-- Player Container -->
+                        <div id="audioPlayerBox_${idx}" class="flex-1 max-w-xs min-w-[200px]">
+                            ${recordedAudioUrls[idx] ? `
+                                <audio controls src="${recordedAudioUrls[idx]}" class="w-full h-8"></audio>
+                            ` : `
+                                <span class="text-xs text-gray-400 italic">录音后可点击回放对比</span>
+                            `}
+                        </div>
+                    </div>
+                `;
+                container.appendChild(card);
+            });
+        }
+
+        async function toggleSentenceRecording(idx) {
+            const btn = document.getElementById(`recBtn_${idx}`);
+            const status = document.getElementById(`recStatus_${idx}`);
+
+            if (isRecordingSentence[idx]) {
+                // Stop recording
+                if (mediaRecorder && mediaRecorder.state !== 'inactive') {
+                    mediaRecorder.stop();
+                }
+                isRecordingSentence[idx] = false;
+                btn.className = "px-4 py-2 bg-rose-500 hover:bg-rose-600 text-white font-bold rounded-xl text-xs sm:text-sm shadow-sm transition flex items-center gap-2";
+                btn.innerHTML = `<i class="fa-solid fa-microphone"></i> 🎤 重新录音`;
+                status.innerText = "录音完成！";
+                status.className = "text-xs text-orange-600 font-bold";
+                return;
+            }
+
+            // Start recording
+            try {
+                const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+                mediaRecorder = new MediaRecorder(stream);
+                audioChunks = [];
+
+                mediaRecorder.ondataavailable = (e) => {
+                    if (e.data.size > 0) audioChunks.push(e.data);
+                };
+
+                mediaRecorder.onstop = () => {
+                    const audioBlob = new Blob(audioChunks, { type: 'audio/webm' });
+                    const audioUrl = URL.createObjectURL(audioBlob);
+                    recordedAudioUrls[idx] = audioUrl;
+
+                    // Update player
+                    const playerBox = document.getElementById(`audioPlayerBox_${idx}`);
+                    playerBox.innerHTML = `<audio controls src="${audioUrl}" class="w-full h-8"></audio>`;
+
+                    stream.getTracks().forEach(track => track.stop());
+                };
+
+                mediaRecorder.start();
+                isRecordingSentence[idx] = true;
+
+                btn.className = "px-4 py-2 bg-red-600 text-white font-bold rounded-xl text-xs sm:text-sm shadow-sm transition flex items-center gap-2 recording-pulse";
+                btn.innerHTML = `<i class="fa-solid fa-square"></i> ⏹️ 停止录音`;
+                status.innerText = "正在录制中...";
+                status.className = "text-xs text-rose-500 font-bold animate-pulse";
+
+            } catch (err) {
+                alert("无法开启麦克风，请确认已授予浏览器麦克风访问权限。");
+            }
+        }
+
+
+        // --- PAGE 3: GRAMMAR & EXERCISES LOGIC ---
+        function startVoiceInputForField(fieldId, iconId) {
+            const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+            if (!SpeechRecognition) {
+                alert("您的浏览器暂不支持语音识别，请直接打字输入。");
+                return;
+            }
+
+            const micIcon = document.getElementById(iconId);
+            const inputField = document.getElementById(fieldId);
+
+            const rec = new SpeechRecognition();
+            rec.lang = 'zh-CN';
+            rec.interimResults = false;
+
+            rec.onstart = () => {
+                if (micIcon) micIcon.className = "fa-solid fa-spinner fa-spin text-rose-500 text-lg";
+            };
+
+            rec.onresult = (event) => {
+                let transcript = event.results[0][0].transcript.trim();
+                // Strip trailing punctuation if user spoke it
+                transcript = transcript.replace(/[？?。！!]$/, '');
+                inputField.value = transcript;
+            };
+
+            rec.onerror = () => {
+                if (micIcon) micIcon.className = "fa-solid fa-microphone text-lg";
+            };
+
+            rec.onend = () => {
+                if (micIcon) micIcon.className = "fa-solid fa-microphone text-lg";
+            };
+
+            rec.start();
+        }
+
+        function toggleReferenceAnswer(exNum) {
+            const refDiv = document.getElementById(`refAns${exNum}`);
+            refDiv.classList.toggle('hidden');
+        }
+
+        function checkGrammarExercises() {
+            const val1 = (document.getElementById('gInput1')?.value || '').trim();
+            const val2 = (document.getElementById('gInput2')?.value || '').trim();
+            const val3 = (document.getElementById('gInput3')?.value || '').trim();
+
+            if (!val1 && !val2 && !val3) {
+                showModal('fa-solid fa-triangle-exclamation text-amber-500 bg-amber-50', '提示', '请至少完成一道对话填空练习后再进行检查。');
+                return;
+            }
+
+            // Validate usage of "的" (and "是" where applicable) in "是……的" structure
+            const check1 = val1.includes('的') && (val1.includes('来') || val1.includes('坐') || val1.includes('走') || val1.includes('骑'));
+            const check2 = val2.includes('的') && (val2.includes('点') || val2.includes('分') || val2.includes('到') || val2.includes('早上') || val2.includes('上午'));
+            const check3 = val3.includes('的') && (val3.includes('哪') || val3.includes('哪里') || val3.includes('哪儿') || val3.includes('什么地方')) && val3.includes('安妮');
+
+            if (check1 && check2 && check3) {
+                if (typeof confetti === 'function') {
+                    confetti({ particleCount: 120, spread: 70, origin: { y: 0.6 } });
+                }
+                showModal(
+                    'fa-solid fa-trophy text-orange-500 bg-orange-50',
+                    '太棒了！完全正确！',
+                    '你成功在对话中正确运用了“是……的”句式来强调方式、时间和地点！'
+                );
+            } else {
+                showModal(
+                    'fa-solid fa-circle-info text-orange-600 bg-orange-50',
+                    '已提交检查',
+                    '请确认你的回答中是否正确使用了“（是）……的”句式，并完整回应了方式、时间或地点。点击“参考答案”可查看标准例句。'
+                );
+            }
+        }
+
+        // Modal Utility
+        function showModal(iconClass, title, message) {
+            const modal = document.getElementById('resultModal');
+            const modalCard = document.getElementById('modalCard');
+            const modalIcon = document.getElementById('modalIcon');
+            const modalTitle = document.getElementById('modalTitle');
+            const modalMessage = document.getElementById('modalMessage');
+
+            modalIcon.className = `w-16 h-16 rounded-full flex items-center justify-center mx-auto mb-4 text-3xl ${iconClass}`;
+            modalTitle.innerText = title;
+            modalMessage.innerHTML = message;
+
+            modal.classList.remove('hidden');
+            setTimeout(() => {
+                modal.classList.remove('opacity-0');
+                modalCard.classList.remove('scale-95');
+                modalCard.classList.add('scale-100');
+            }, 10);
+        }
+
+        function closeModal() {
+            const modal = document.getElementById('resultModal');
+            const modalCard = document.getElementById('modalCard');
+            modal.classList.add('opacity-0');
+            modalCard.classList.remove('scale-100');
+            modalCard.classList.add('scale-95');
+            setTimeout(() => {
+                modal.classList.add('hidden');
+            }, 300);
+        }
+
+        // Window Onload
+        window.onload = () => {
+            renderSentenceList();
+            initCanvas();
+        };
+    </script>
+</body>
+</html>
