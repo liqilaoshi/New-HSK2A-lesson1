@@ -1,0 +1,1648 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>HSK 2 Lesson 1 - Text 2 Interactive Learning</title>
+    <!-- Canvas Confetti for celebratory feedback -->
+    <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
+    <!-- Font Awesome Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        :root {
+            /* HSK 2 Orange Aesthetic Theme */
+            --primary-color: #f58220;
+            --primary-dark: #d96b0c;
+            --primary-light: #fff3e6;
+            --bg-color: #f8faf9;
+            --card-bg: #ffffff;
+            --text-dark: #2c3e50;
+            --text-muted: #666666;
+            --accent-color: #e65100;
+            --correct-color: #2ecc71;
+            --wrong-color: #e74c3c;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, "PingFang SC", "Microsoft YaHei", sans-serif;
+        }
+
+        body {
+            background-color: var(--bg-color);
+            color: var(--text-dark);
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            padding: 20px;
+        }
+
+        .container {
+            width: 100%;
+            max-width: 960px;
+            background: var(--card-bg);
+            border-radius: 16px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.08);
+            overflow: hidden;
+            position: relative;
+            margin-bottom: 20px;
+        }
+
+        /* Top Header Navigation */
+        .top-header {
+            background-color: var(--primary-color);
+            color: white;
+            padding: 16px 24px;
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: space-between;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .top-header h1 {
+            font-size: 19px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .pill-tag {
+            background: rgba(255, 255, 255, 0.25);
+            padding: 3px 12px;
+            border-radius: 20px;
+            font-size: 13px;
+            font-weight: bold;
+        }
+
+        .nav-tabs {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px;
+        }
+
+        .tab-btn {
+            background: rgba(255, 255, 255, 0.2);
+            border: none;
+            color: white;
+            padding: 7px 14px;
+            border-radius: 20px;
+            cursor: pointer;
+            font-size: 13px;
+            font-weight: bold;
+            transition: all 0.25s ease;
+        }
+
+        .tab-btn:hover {
+            background: rgba(255, 255, 255, 0.35);
+        }
+
+        .tab-btn.active {
+            background: white;
+            color: var(--primary-dark);
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.12);
+        }
+
+        /* Page Layouts */
+        .page-content {
+            display: none;
+            padding: 28px;
+            animation: fadeIn 0.35s ease;
+        }
+
+        .page-content.active {
+            display: block;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(8px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .lesson-banner {
+            background-color: var(--primary-light);
+            border-left: 5px solid var(--primary-color);
+            padding: 15px 20px;
+            border-radius: 8px;
+            margin-bottom: 22px;
+        }
+
+        .lesson-banner h2 {
+            color: var(--primary-dark);
+            font-size: 20px;
+            margin-bottom: 5px;
+        }
+
+        .lesson-banner p {
+            color: var(--text-muted);
+            font-size: 14px;
+            line-height: 1.5;
+        }
+
+        /* Scene Image Card */
+        .scene-wrapper {
+            margin-bottom: 22px;
+            border-radius: 12px;
+            overflow: hidden;
+            border: 1px solid #ffe0b2;
+            background: #fffaf5;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+
+        .scene-wrapper img {
+            width: 100%;
+            max-height: 330px;
+            object-fit: cover;
+            display: block;
+        }
+
+        .scene-caption {
+            width: 100%;
+            padding: 10px 16px;
+            background: var(--primary-light);
+            color: var(--primary-dark);
+            font-size: 13px;
+            font-weight: 600;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 10px;
+        }
+
+        /* PAGE 1: Text & Vocab Hover */
+        .dialogue-layout {
+            display: grid;
+            grid-template-columns: 3fr 2fr;
+            gap: 24px;
+        }
+
+        @media (max-width: 768px) {
+            .dialogue-layout {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        .chat-container {
+            display: flex;
+            flex-direction: column;
+            gap: 18px;
+        }
+
+        .chat-item {
+            display: flex;
+            gap: 14px;
+            align-items: flex-start;
+        }
+
+        .avatar-box {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            width: 66px;
+            flex-shrink: 0;
+        }
+
+        .avatar-box img {
+            width: 50px;
+            height: 50px;
+            border-radius: 50%;
+            object-fit: cover;
+            border: 2px solid var(--primary-color);
+            background: #fff;
+            box-shadow: 0 3px 8px rgba(245, 130, 32, 0.2);
+        }
+
+        .avatar-badge-annie {
+            width: 50px;
+            height: 50px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, #f58220, #ffab40);
+            color: white;
+            font-weight: bold;
+            font-size: 17px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border: 2px solid var(--primary-color);
+            box-shadow: 0 3px 8px rgba(245, 130, 32, 0.2);
+        }
+
+        .avatar-box span {
+            font-size: 12px;
+            color: var(--text-muted);
+            margin-top: 5px;
+            text-align: center;
+            font-weight: 600;
+        }
+
+        .speech-bubble {
+            background: #fffdf9;
+            border: 1.5px solid #ffe0b2;
+            border-radius: 12px;
+            padding: 14px 18px;
+            font-size: 18px;
+            line-height: 1.85;
+            position: relative;
+            max-width: 86%;
+            color: #333;
+        }
+
+        .speech-bubble::before {
+            content: '';
+            position: absolute;
+            left: -8px;
+            top: 16px;
+            width: 0;
+            height: 0;
+            border-top: 8px solid transparent;
+            border-bottom: 8px solid transparent;
+            border-right: 8px solid #ffe0b2;
+        }
+
+        /* Hover Vocabulary Highlight & Tooltip */
+        .vocab-word {
+            color: var(--primary-dark);
+            font-weight: bold;
+            border-bottom: 2px dashed var(--primary-color);
+            cursor: pointer;
+            position: relative;
+            padding: 0 2px;
+            transition: background 0.2s;
+            display: inline-block;
+        }
+
+        .vocab-word:hover {
+            background-color: #ffe0b2;
+            border-radius: 4px;
+        }
+
+        .tooltip-card {
+            visibility: hidden;
+            opacity: 0;
+            width: 245px;
+            background-color: #ffffff;
+            color: #333;
+            text-align: left;
+            border-radius: 10px;
+            padding: 12px;
+            position: absolute;
+            z-index: 100;
+            bottom: 130%;
+            left: 50%;
+            transform: translateX(-50%);
+            box-shadow: 0 6px 22px rgba(0, 0, 0, 0.18);
+            border: 1.5px solid var(--primary-color);
+            transition: opacity 0.25s, visibility 0.25s, transform 0.25s;
+            font-weight: normal;
+            font-size: 14px;
+            line-height: 1.45;
+            pointer-events: none;
+        }
+
+        .tooltip-card::after {
+            content: "";
+            position: absolute;
+            top: 100%;
+            left: 50%;
+            margin-left: -6px;
+            border-width: 6px;
+            border-style: solid;
+            border-color: var(--primary-color) transparent transparent transparent;
+        }
+
+        .vocab-word:hover .tooltip-card {
+            visibility: visible;
+            opacity: 1;
+            transform: translateX(-50%) translateY(-4px);
+        }
+
+        .tooltip-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border-bottom: 1px solid #f0f0f0;
+            padding-bottom: 6px;
+            margin-bottom: 6px;
+        }
+
+        .tooltip-py {
+            color: var(--primary-dark);
+            font-weight: bold;
+            font-size: 15px;
+        }
+
+        .tooltip-pos {
+            background: var(--primary-light);
+            padding: 2px 7px;
+            border-radius: 4px;
+            font-size: 11px;
+            color: var(--primary-dark);
+            font-weight: bold;
+        }
+
+        .tooltip-en {
+            color: #444;
+            font-size: 13px;
+        }
+
+        /* Sidebar Vocabulary Reference */
+        .sidebar-vocab {
+            background: #fffaf5;
+            border: 1px solid #ffe0b2;
+            border-radius: 12px;
+            padding: 18px;
+        }
+
+        .sidebar-vocab h3 {
+            font-size: 16px;
+            color: var(--primary-dark);
+            margin-bottom: 12px;
+            padding-bottom: 8px;
+            border-bottom: 2px solid var(--primary-color);
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+
+        .vocab-list {
+            list-style: none;
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+
+        .vocab-item {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            background: white;
+            padding: 10px 12px;
+            border-radius: 8px;
+            border: 1px solid #ffecd2;
+            font-size: 14px;
+            gap: 8px;
+            cursor: pointer;
+            transition: border-color 0.2s, background-color 0.2s;
+        }
+
+        .vocab-item:hover {
+            border-color: var(--primary-color);
+            background-color: #fffdf9;
+        }
+
+        .vocab-item-cn {
+            font-weight: bold;
+            font-size: 16px;
+            color: #222;
+        }
+
+        .vocab-item-py {
+            color: var(--primary-dark);
+            font-size: 13px;
+            font-weight: 600;
+            margin-left: 4px;
+        }
+
+        .vocab-item-pos {
+            color: #888;
+            font-size: 12px;
+            font-style: italic;
+            margin-left: 4px;
+        }
+
+        .vocab-item-en {
+            color: #555;
+            font-size: 12.5px;
+            text-align: right;
+            max-width: 160px;
+        }
+
+        .speak-icon-btn {
+            background: none;
+            border: none;
+            cursor: pointer;
+            font-size: 16px;
+            color: var(--primary-color);
+            transition: transform 0.2s;
+            vertical-align: middle;
+        }
+
+        .speak-icon-btn:hover {
+            transform: scale(1.25);
+        }
+
+        /* PAGE 2: Multiple Choice Quiz */
+        .quiz-card {
+            background: white;
+            border-radius: 12px;
+            padding: 20px;
+            margin-bottom: 18px;
+            border: 1px solid #ffe0b2;
+        }
+
+        .quiz-title {
+            font-size: 17px;
+            font-weight: bold;
+            margin-bottom: 14px;
+            color: var(--text-dark);
+        }
+
+        .options-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 12px;
+        }
+
+        @media (max-width: 600px) {
+            .options-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        .option-btn {
+            background: #fafafa;
+            border: 2px solid #eeeeee;
+            padding: 12px 16px;
+            border-radius: 10px;
+            cursor: pointer;
+            text-align: left;
+            font-size: 14.5px;
+            transition: all 0.2s;
+        }
+
+        .option-btn:hover {
+            border-color: var(--primary-color);
+            background: var(--primary-light);
+        }
+
+        .option-btn.selected {
+            border-color: var(--primary-color);
+            background: var(--primary-light);
+            color: var(--primary-dark);
+            font-weight: bold;
+        }
+
+        .option-btn.correct {
+            border-color: var(--correct-color);
+            background: #d4edda;
+            color: #155724;
+            font-weight: bold;
+        }
+
+        .option-btn.wrong {
+            border-color: var(--wrong-color);
+            background: #f8d7da;
+            color: #721c24;
+        }
+
+        /* PAGE 3, 4, 5: Interactive Cards & Speech */
+        .speech-test-card {
+            background: white;
+            border-radius: 14px;
+            padding: 26px;
+            text-align: center;
+            border: 1.5px solid #ffe0b2;
+            margin-bottom: 20px;
+        }
+
+        .word-display-box {
+            font-size: 52px;
+            font-weight: bold;
+            color: var(--primary-dark);
+            margin: 18px 0 8px 0;
+            letter-spacing: 3px;
+        }
+
+        .sentence-display-box {
+            font-size: 24px;
+            font-weight: bold;
+            color: var(--text-dark);
+            margin: 16px 0 8px 0;
+            line-height: 1.6;
+            padding: 14px;
+            background: #fffaf5;
+            border-radius: 10px;
+            border: 1px dashed #ffcc80;
+        }
+
+        .pinyin-hint-box {
+            font-size: 18px;
+            color: var(--primary-color);
+            min-height: 28px;
+            margin-bottom: 18px;
+            font-weight: 600;
+        }
+
+        .speech-controls {
+            display: flex;
+            justify-content: center;
+            gap: 12px;
+            margin-bottom: 18px;
+            flex-wrap: wrap;
+        }
+
+        .btn {
+            padding: 10px 20px;
+            border-radius: 25px;
+            border: none;
+            font-size: 14px;
+            font-weight: bold;
+            cursor: pointer;
+            transition: all 0.25s;
+            display: inline-flex;
+            align-items: center;
+            gap: 7px;
+        }
+
+        .btn-primary {
+            background: var(--primary-color);
+            color: white;
+        }
+
+        .btn-primary:hover {
+            background: var(--primary-dark);
+            box-shadow: 0 4px 12px rgba(245, 130, 32, 0.35);
+        }
+
+        .btn-outline {
+            background: transparent;
+            border: 2px solid var(--primary-color);
+            color: var(--primary-dark);
+        }
+
+        .btn-outline:hover {
+            background: var(--primary-light);
+        }
+
+        .btn-mic {
+            background: #e74c3c;
+            color: white;
+        }
+
+        .btn-mic:hover {
+            background: #c0392b;
+        }
+
+        .btn-mic.recording {
+            animation: pulse 1.4s infinite;
+        }
+
+        @keyframes pulse {
+            0% { box-shadow: 0 0 0 0 rgba(231, 76, 60, 0.7); }
+            70% { box-shadow: 0 0 0 12px rgba(231, 76, 60, 0); }
+            100% { box-shadow: 0 0 0 0 rgba(231, 76, 60, 0); }
+        }
+
+        .speech-feedback {
+            font-size: 15px;
+            min-height: 26px;
+            font-weight: 500;
+            margin-top: 8px;
+        }
+
+        /* QA Card (Page 5) */
+        .qa-card {
+            background: #fffdf9;
+            border: 1.5px solid #ffe0b2;
+            border-radius: 12px;
+            padding: 20px;
+            margin-bottom: 18px;
+        }
+
+        .qa-question {
+            font-size: 18px;
+            font-weight: bold;
+            color: var(--primary-dark);
+            margin-bottom: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 10px;
+        }
+
+        .qa-answer-box {
+            background: white;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            padding: 12px 14px;
+            min-height: 46px;
+            font-size: 16px;
+            color: #333;
+            margin-bottom: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+
+        .qa-result-tag {
+            font-size: 13px;
+            font-weight: bold;
+            padding: 4px 10px;
+            border-radius: 6px;
+            white-space: nowrap;
+        }
+
+        /* Action Footer Bar */
+        .action-footer {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 10px;
+            margin-top: 22px;
+            padding-top: 16px;
+            border-top: 1px solid #f0f0f0;
+        }
+
+        .score-banner {
+            text-align: center;
+            padding: 15px;
+            background: var(--primary-light);
+            border: 1.5px solid var(--primary-color);
+            border-radius: 10px;
+            font-size: 18px;
+            font-weight: bold;
+            color: var(--primary-dark);
+            margin-top: 15px;
+            display: none;
+        }
+
+        /* Status Toast Banner */
+        .status-toast {
+            position: fixed;
+            bottom: 24px;
+            right: 24px;
+            background: var(--text-dark);
+            color: white;
+            padding: 12px 18px;
+            border-radius: 10px;
+            font-size: 14px;
+            box-shadow: 0 6px 20px rgba(0, 0, 0, 0.2);
+            z-index: 999;
+            opacity: 0;
+            transform: translateY(10px);
+            transition: opacity 0.25s, transform 0.25s;
+            pointer-events: none;
+        }
+
+        .status-toast.show {
+            opacity: 1;
+            transform: translateY(0);
+        }
+    </style>
+</head>
+<body>
+
+    <div class="container">
+        <!-- Top Header Navigation -->
+        <div class="top-header">
+            <h1><span class="pill-tag">HSK 2 · 第1课</span> 课文2 学习与巩固</h1>
+            <div class="nav-tabs">
+                <button class="tab-btn active" onclick="switchPage(1)">1. 课文与生词</button>
+                <button class="tab-btn" onclick="switchPage(2)">2. 汉英选择题</button>
+                <button class="tab-btn" onclick="switchPage(3)">3. 认读测验</button>
+                <button class="tab-btn" onclick="switchPage(4)">4. 重点句朗读</button>
+                <button class="tab-btn" onclick="switchPage(5)">5. 语音问答</button>
+            </div>
+        </div>
+
+        <!-- ========================================================= -->
+        <!-- PAGE 1: Scene Image, Dialogue & Hover Vocabulary          -->
+        <!-- ========================================================= -->
+        <div id="page1" class="page-content active">
+            <div class="lesson-banner">
+                <h2>📍 课文2：你们是第一次来北京吗？</h2>
+                <p>Are you coming to Beijing for the first time?</p>
+                <p style="margin-top: 6px; color: var(--primary-dark); font-weight: bold;">💡 学习提示：将鼠标滑到下划线词语上可查看读音、词性与英译，点击词语或 🔊 可听发音。</p>
+            </div>
+
+            <!-- Scene Image -->
+            <div class="scene-wrapper">
+                <img
+                    src="https://i.ibb.co.com/XxLtdr4N/image.png"
+                    alt="课文2场景图"
+                    onerror="this.onerror=null;this.src='https://placehold.co/900x320/fff3e6/d96b0c?text=HSK+2+Lesson+1+Text+2+Scene';"
+                >
+                <div class="scene-caption">
+                    <span>🖼️ 课文2 场景：王一雪与白家月、安妮交流来北京的目的</span>
+                    <button class="btn btn-primary" style="padding: 6px 14px; font-size: 12px;" onclick="speakFullDialogue()">🔊 朗读全段对话</button>
+                </div>
+            </div>
+
+            <div class="dialogue-layout">
+                <!-- Dialogue Chat Section -->
+                <div class="chat-container">
+
+                    <!-- Line 1: 王一雪 -->
+                    <div class="chat-item">
+                        <div class="avatar-box">
+                            <img
+                                src="https://i.ibb.co.com/mKJL8P7/image.png"
+                                alt="王一雪"
+                                onerror="this.onerror=null;this.src='https://placehold.co/60x60/fff3e6/d96b0c?text=王';"
+                            >
+                            <span>王一雪</span>
+                        </div>
+                        <div class="speech-bubble">
+                            你们是
+                            <span class="vocab-word" onclick="speakText('第一次')">第一次
+                                <span class="tooltip-card">
+                                    <span class="tooltip-header"><span class="tooltip-py">dì-yī cì</span><span class="tooltip-pos">num.-m.</span></span>
+                                    <span class="tooltip-en">first time</span>
+                                </span>
+                            </span>
+                            来北京吗？
+                            <button class="speak-icon-btn" onclick="speakText('你们是第一次来北京吗？')">🔊</button>
+                        </div>
+                    </div>
+
+                    <!-- Line 2: 白家月 -->
+                    <div class="chat-item">
+                        <div class="avatar-box">
+                            <img
+                                src="https://i.ibb.co.com/hxdZGkcS/image.png"
+                                alt="白家月"
+                                onerror="this.onerror=null;this.src='https://placehold.co/60x60/fff3e6/d96b0c?text=白';"
+                            >
+                            <span>白家月</span>
+                        </div>
+                        <div class="speech-bubble">
+                            是的，我们都是
+                            <span class="vocab-word" onclick="speakText('第一次')">第一次
+                                <span class="tooltip-card">
+                                    <span class="tooltip-header"><span class="tooltip-py">dì-yī cì</span><span class="tooltip-pos">num.-m.</span></span>
+                                    <span class="tooltip-en">first time</span>
+                                </span>
+                            </span>
+                            来。
+                            <button class="speak-icon-btn" onclick="speakText('是的，我们都是第一次来。')">🔊</button>
+                        </div>
+                    </div>
+
+                    <!-- Line 3: 王一雪 -->
+                    <div class="chat-item">
+                        <div class="avatar-box">
+                            <img
+                                src="https://i.ibb.co.com/mKJL8P7/image.png"
+                                alt="王一雪"
+                                onerror="this.onerror=null;this.src='https://placehold.co/60x60/fff3e6/d96b0c?text=王';"
+                            >
+                            <span>王一雪</span>
+                        </div>
+                        <div class="speech-bubble">
+                            你们是来学
+                            <span class="vocab-word" onclick="speakText('中文')">中文
+                                <span class="tooltip-card">
+                                    <span class="tooltip-header"><span class="tooltip-py">Zhōngwén</span><span class="tooltip-pos">n.</span></span>
+                                    <span class="tooltip-en">Chinese language</span>
+                                </span>
+                            </span>
+                            的吗？
+                            <button class="speak-icon-btn" onclick="speakText('你们是来学中文的吗？')">🔊</button>
+                        </div>
+                    </div>
+
+                    <!-- Line 4: 安妮 -->
+                    <div class="chat-item">
+                        <div class="avatar-box">
+                            <img
+                                src="https://i.ibb.co.com/B2Xvvc03/image.png"
+                                alt="安妮"
+                                onerror="this.onerror=null;this.src='https://placehold.co/60x60/fff3e6/d96b0c?text=安';"
+                            >
+                            <span>安妮</span>
+                        </div>
+
+                        <div class="speech-bubble">
+                            不是，我们是来
+                            <span class="vocab-word" onclick="speakText('旅游')">旅游
+                                <span class="tooltip-card">
+                                    <span class="tooltip-header"><span class="tooltip-py">lǚyóu</span><span class="tooltip-pos">v.</span></span>
+                                    <span class="tooltip-en">travel; make a tour</span>
+                                </span>
+                            </span>
+                            的。
+                            <button class="speak-icon-btn" onclick="speakText('不是，我们是来旅游的。')">🔊</button>
+                        </div>
+                    </div>
+
+                    <!-- Line 5: 王一雪 -->
+                    <div class="chat-item">
+                        <div class="avatar-box">
+                            <img
+                                src="https://i.ibb.co.com/mKJL8P7/image.png"
+                                alt="王一雪"
+                                onerror="this.onerror=null;this.src='https://placehold.co/60x60/fff3e6/d96b0c?text=王';"
+                            >
+                            <span>王一雪</span>
+                        </div>
+                        <div class="speech-bubble">
+                            我这几天都不
+                            <span class="vocab-word" onclick="speakText('忙')">忙
+                                <span class="tooltip-card">
+                                    <span class="tooltip-header"><span class="tooltip-py">máng</span><span class="tooltip-pos">adj.</span></span>
+                                    <span class="tooltip-en">busy</span>
+                                </span>
+                            </span>
+                            ，你们有事就
+                            <span class="vocab-word" onclick="speakText('找')">找
+                                <span class="tooltip-card">
+                                    <span class="tooltip-header"><span class="tooltip-py">zhǎo</span><span class="tooltip-pos">v.</span></span>
+                                    <span class="tooltip-en">look for; turn to</span>
+                                </span>
+                            </span>
+                            我。
+                            <button class="speak-icon-btn" onclick="speakText('我这几天都不忙，你们有事就找我。')">🔊</button>
+                        </div>
+                    </div>
+
+                    <!-- Line 6: 白家月 -->
+                    <div class="chat-item">
+                        <div class="avatar-box">
+                            <img
+                                src="https://i.ibb.co.com/hxdZGkcS/image.png"
+                                alt="白家月"
+                                onerror="this.onerror=null;this.src='https://placehold.co/60x60/fff3e6/d96b0c?text=白';"
+                            >
+                            <span>白家月</span>
+                        </div>
+                        <div class="speech-bubble">
+                            好的，谢谢您。
+                            <button class="speak-icon-btn" onclick="speakText('好的，谢谢您。')">🔊</button>
+                        </div>
+                    </div>
+
+                </div>
+
+                <!-- Sidebar Vocabulary List -->
+                <div class="sidebar-vocab">
+                    <h3>生词 New Words <button class="speak-icon-btn" onclick="speakAllVocab()" title="朗读全部生词">🔊</button></h3>
+                    <ul class="vocab-list">
+                        <li class="vocab-item" onclick="speakText('次')">
+                            <div>
+                                <span class="vocab-item-cn">⑤ 次</span>
+                                <span class="vocab-item-py">cì</span>
+                                <span class="vocab-item-pos">m.</span>
+                            </div>
+                            <div class="vocab-item-en">(indicating how many times or which time) time; occurrence <button class="speak-icon-btn" onclick="event.stopPropagation(); speakText('次')">🔊</button></div>
+                        </li>
+                        <li class="vocab-item" onclick="speakText('旅游')">
+                            <div>
+                                <span class="vocab-item-cn">⑥ 旅游</span>
+                                <span class="vocab-item-py">lǚyóu</span>
+                                <span class="vocab-item-pos">v.</span>
+                            </div>
+                            <div class="vocab-item-en">travel; make a tour <button class="speak-icon-btn" onclick="event.stopPropagation(); speakText('旅游')">🔊</button></div>
+                        </li>
+                        <li class="vocab-item" onclick="speakText('第一次')">
+                            <div>
+                                <span class="vocab-item-cn">• 第一次</span>
+                                <span class="vocab-item-py">dì-yī cì</span>
+                                <span class="vocab-item-pos">num.-m.</span>
+                            </div>
+                            <div class="vocab-item-en">first time <button class="speak-icon-btn" onclick="event.stopPropagation(); speakText('第一次')">🔊</button></div>
+                        </li>
+                        <li class="vocab-item" onclick="speakText('中文')">
+                            <div>
+                                <span class="vocab-item-cn">• 中文</span>
+                                <span class="vocab-item-py">Zhōngwén</span>
+                                <span class="vocab-item-pos">n.</span>
+                            </div>
+                            <div class="vocab-item-en">Chinese language <button class="speak-icon-btn" onclick="event.stopPropagation(); speakText('中文')">🔊</button></div>
+                        </li>
+                        <li class="vocab-item" onclick="speakText('忙')">
+                            <div>
+                                <span class="vocab-item-cn">• 忙</span>
+                                <span class="vocab-item-py">máng</span>
+                                <span class="vocab-item-pos">adj.</span>
+                            </div>
+                            <div class="vocab-item-en">busy <button class="speak-icon-btn" onclick="event.stopPropagation(); speakText('忙')">🔊</button></div>
+                        </li>
+                        <li class="vocab-item" onclick="speakText('找')">
+                            <div>
+                                <span class="vocab-item-cn">• 找</span>
+                                <span class="vocab-item-py">zhǎo</span>
+                                <span class="vocab-item-pos">v.</span>
+                            </div>
+                            <div class="vocab-item-en">look for; turn to <button class="speak-icon-btn" onclick="event.stopPropagation(); speakText('找')">🔊</button></div>
+                        </li>
+                    </ul>
+                </div>
+            </div>
+
+            <div class="action-footer">
+                <div></div>
+                <button class="btn btn-primary" onclick="switchPage(2)">进入下一页：第二部分 汉英选择题 ➔</button>
+            </div>
+        </div>
+
+        <!-- ========================================================= -->
+        <!-- PAGE 2: Chinese to English MCQ Quiz                       -->
+        <!-- ========================================================= -->
+        <div id="page2" class="page-content">
+            <div class="lesson-banner">
+                <h2>📝 第二部分：汉-英单项选择题小测试</h2>
+                <p>请为下面的中文词汇选择唯一正确的英文翻译（每题 1 分，按答对题数计分，满分 6 分）。</p>
+            </div>
+
+            <div id="quizContainer"></div>
+
+            <div class="score-banner" id="mcqScoreBanner"></div>
+
+            <div class="action-footer">
+                <button class="btn btn-outline" onclick="switchPage(1)">⬅ 返回第一部分</button>
+                <div style="display:flex; gap:10px; flex-wrap: wrap;">
+                    <button class="btn btn-outline" onclick="resetMCQ()">🔄 重置测试</button>
+                    <button class="btn btn-primary" onclick="checkMCQ()">✅ 提交评分 / Submit</button>
+                    <button class="btn btn-primary" onclick="switchPage(3)">进入下一页：第三部分 认读测验 ➔</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- ========================================================= -->
+        <!-- PAGE 3: Speech Recognition Character Reading Test         -->
+        <!-- ========================================================= -->
+        <div id="page3" class="page-content">
+            <div class="lesson-banner">
+                <h2>🎙️ 第三部分：生词认读与语音识别测试</h2>
+                <p>在<strong>没有拼音</strong>的情况下直接读出屏幕上的汉字。遇到困难时可点击“💡 提示（显示拼音）”。</p>
+            </div>
+
+            <div class="speech-test-card">
+                <div style="font-size: 14px; color: #777; font-weight: bold;">
+                    第 <span id="speechCurrentIdx">1</span> / <span id="speechTotal">6</span> 题 · 已掌握：<span id="speechPassedCount" style="color: var(--correct-color);">0</span> 词
+                </div>
+
+                <div class="word-display-box" id="speechTargetWord">次</div>
+                <div class="pinyin-hint-box" id="speechPinyinHint"></div>
+
+                <div class="speech-controls">
+                    <button class="btn btn-outline" onclick="togglePinyinHint()">💡 提示 (显示拼音)</button>
+                    <button class="btn btn-mic" id="recordBtn" onclick="toggleWordRecognition()">🎤 点击开始朗读</button>
+                    <button class="btn btn-outline" onclick="speakText(vocabData[currentSpeechIndex].word)">🔊 听标准发音</button>
+                </div>
+
+                <div class="speech-feedback" id="speechFeedback">点击麦克风按钮后，清晰读出上面的汉字...</div>
+            </div>
+
+            <div class="action-footer">
+                <button class="btn btn-outline" onclick="switchPage(2)">⬅ 返回第二部分</button>
+                <div style="display:flex; gap:10px;">
+                    <button class="btn btn-outline" onclick="nextSpeechWord()">切换下一个生词 ↻</button>
+                    <button class="btn btn-primary" onclick="switchPage(4)">进入下一页：第四部分 重点句朗读 ➔</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- ========================================================= -->
+        <!-- PAGE 4: Key Sentences Recording & Playback + Confetti     -->
+        <!-- ========================================================= -->
+        <div id="page4" class="page-content">
+            <div class="lesson-banner">
+                <h2>🎧 第四部分：重点句子朗读练习（录音与回放）</h2>
+                <p>请大声朗读课文2中的重点句子，支持实时录音、回放自听对比；完成全部重点句练习即可触发通关彩带庆祝！</p>
+            </div>
+
+            <div class="speech-test-card">
+                <div style="font-size: 14px; color: #777; font-weight: bold;">
+                    重点句 <span id="sentIdxDisplay">1</span> / <span id="sentTotalDisplay">3</span> · 打卡进度：<span id="sentDoneCount" style="color: var(--primary-dark);">0</span> / 3
+                </div>
+
+                <div class="sentence-display-box" id="targetSentenceBox">你们是第一次来北京吗？</div>
+                <div class="pinyin-hint-box" id="targetSentencePinyin" style="font-size: 15px;">Nǐmen shì dì-yī cì lái Běijīng ma?</div>
+
+                <div class="speech-controls">
+                    <button class="btn btn-outline" onclick="speakCurrentSentence()">🔊 听示范朗读</button>
+                    <button class="btn btn-mic" id="sentRecBtn" onclick="toggleSentenceAudioRecord()">⏺️ 开始录音</button>
+                    <button class="btn btn-primary" id="sentPlayBtn" onclick="playRecordedSentence()" disabled style="opacity: 0.5;">▶️ 回放我的录音</button>
+                </div>
+
+                <audio id="recordedAudioPlayer" style="display:none;"></audio>
+                <div class="speech-feedback" id="sentFeedback">点击“开始录音”练习朗读句子，录完后可点击“回放我的录音”对比原音。</div>
+            </div>
+
+            <div class="action-footer">
+                <button class="btn btn-outline" onclick="switchPage(3)">⬅ 返回第三部分</button>
+                <div style="display:flex; gap:10px;">
+                    <button class="btn btn-outline" onclick="nextSentence()">下一句 ↻</button>
+                    <button class="btn btn-primary" onclick="switchPage(5)">进入下一页：第五部分 语音问答 ➔</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- ========================================================= -->
+        <!-- PAGE 5: Listening/Reading Q&A with Voice Input & Auto-Score -->
+        <!-- ========================================================= -->
+        <div id="page5" class="page-content">
+            <div class="lesson-banner">
+                <h2>🗣️ 第五部分：课文问答（语音回答与自动打分）</h2>
+                <p>根据课文2内容，点击麦克风按钮用中文说出答案，系统将自动识别并为您打分（每题 50 分，满分 100 分）。</p>
+            </div>
+
+            <!-- Question 1 -->
+            <div class="qa-card">
+                <div class="qa-question">
+                    <span>(1) 王一雪这几天忙不忙？ <button class="speak-icon-btn" onclick="speakText('王一雪这几天忙不忙？')">🔊</button></span>
+                    <span id="qaScore1" class="qa-result-tag" style="background:#f0f0f0; color:#666;">未作答 (0分)</span>
+                </div>
+                <div class="qa-answer-box">
+                    <span id="qaTranscript1" style="color:#888;">请点击下方按钮语音输入你的回答...</span>
+                </div>
+                <div style="display:flex; gap:10px; align-items:center; flex-wrap:wrap;">
+                    <button class="btn btn-mic" id="qaRecBtn1" onclick="recordQAAnswer(1)">🎤 语音回答第(1)题</button>
+                    <span id="qaHint1" style="font-size:13px; color:#777;"></span>
+                </div>
+            </div>
+
+            <!-- Question 2 -->
+            <div class="qa-card">
+                <div class="qa-question">
+                    <span>(2) 白家月有事可以找谁？ <button class="speak-icon-btn" onclick="speakText('白家月有事可以找谁？')">🔊</button></span>
+                    <span id="qaScore2" class="qa-result-tag" style="background:#f0f0f0; color:#666;">未作答 (0分)</span>
+                </div>
+                <div class="qa-answer-box">
+                    <span id="qaTranscript2" style="color:#888;">请点击下方按钮语音输入你的回答...</span>
+                </div>
+                <div style="display:flex; gap:10px; align-items:center; flex-wrap:wrap;">
+                    <button class="btn btn-mic" id="qaRecBtn2" onclick="recordQAAnswer(2)">🎤 语音回答第(2)题</button>
+                    <span id="qaHint2" style="font-size:13px; color:#777;"></span>
+                </div>
+            </div>
+
+            <div class="score-banner" id="qaTotalScoreBanner" style="display:block;">
+                当前问答总得分：<span id="qaTotalScoreVal">0</span> / 100 分
+            </div>
+
+            <div class="action-footer">
+                <button class="btn btn-outline" onclick="switchPage(4)">⬅ 返回第四部分</button>
+                <button class="btn btn-primary" onclick="switchPage(1)">🏠 返回第一页复习课文</button>
+            </div>
+        </div>
+
+    </div>
+
+    <!-- Non-blocking Toast Banner -->
+    <div id="statusToast" class="status-toast"></div>
+
+    <script>
+        // Helper: non-blocking toast notification instead of alert()
+        function showToast(msg) {
+            const toast = document.getElementById('statusToast');
+            toast.innerText = msg;
+            toast.classList.add('show');
+            setTimeout(() => {
+                toast.classList.remove('show');
+            }, 3200);
+        }
+
+        // 1. Vocabulary Data (Core Text 2 words including Image 2 items ⑤ 次 and ⑥ 旅游)
+        const vocabData = [
+            { word: "次", pinyin: "cì", pos: "m.", english: "(indicating how many times or which time) time; occurrence" },
+            { word: "旅游", pinyin: "lǚyóu", pos: "v.", english: "travel; make a tour" },
+            { word: "第一次", pinyin: "dì-yī cì", pos: "num.-m.", english: "first time" },
+            { word: "中文", pinyin: "Zhōngwén", pos: "n.", english: "Chinese language" },
+            { word: "忙", pinyin: "máng", pos: "adj.", english: "busy" },
+            { word: "找", pinyin: "zhǎo", pos: "v.", english: "look for; turn to" }
+        ];
+
+        // 2. MCQ Quiz Data (Strictly unique options per question, 1 exact correct answer)
+        const mcqData = [
+            {
+                word: "次",
+                correct: "(indicating how many times or which time) time; occurrence",
+                options: [
+                    "(indicating how many times or which time) time; occurrence",
+                    "travel; make a tour",
+                    "busy",
+                    "look for; turn to"
+                ]
+            },
+            {
+                word: "旅游",
+                correct: "travel; make a tour",
+                options: [
+                    "travel; make a tour",
+                    "Chinese language",
+                    "first time",
+                    "(indicating how many times or which time) time; occurrence"
+                ]
+            },
+            {
+                word: "第一次",
+                correct: "first time",
+                options: [
+                    "first time",
+                    "busy",
+                    "travel; make a tour",
+                    "look for; turn to"
+                ]
+            },
+            {
+                word: "中文",
+                correct: "Chinese language",
+                options: [
+                    "Chinese language",
+                    "first time",
+                    "busy",
+                    "travel; make a tour"
+                ]
+            },
+            {
+                word: "忙",
+                correct: "busy",
+                options: [
+                    "busy",
+                    "look for; turn to",
+                    "Chinese language",
+                    "(indicating how many times or which time) time; occurrence"
+                ]
+            },
+            {
+                word: "找",
+                correct: "look for; turn to",
+                options: [
+                    "look for; turn to",
+                    "busy",
+                    "first time",
+                    "Chinese language"
+                ]
+            }
+        ];
+
+        // 3. Key Sentences Data (Page 4)
+        const keySentences = [
+            {
+                cn: "你们是第一次来北京吗？",
+                py: "Nǐmen shì dì-yī cì lái Běijīng ma?"
+            },
+            {
+                cn: "不是，我们是来旅游的。",
+                py: "Bú shì, wǒmen shì lái lǚyóu de."
+            },
+            {
+                cn: "我这几天都不忙，你们有事就找我。",
+                py: "Wǒ zhè jǐ tiān dōu bù máng, nǐmen yǒu shì jiù zhǎo wǒ."
+            }
+        ];
+
+        // State Variables
+        let mcqUserAnswers = {};
+        let mcqRendered = false;
+
+        let currentSpeechIndex = 0;
+        let passedWords = new Set();
+        let isWordRecording = false;
+        let wordRecognition = null;
+
+        let currentSentIndex = 0;
+        let completedSentences = new Set();
+        let mediaRecorder = null;
+        let audioChunks = [];
+        let isAudioRecording = false;
+
+        let qaScores = { 1: 0, 2: 0 };
+
+        // --- Navigation ---
+        function switchPage(pageNum) {
+            try {
+                document.querySelectorAll('.page-content').forEach(p => p.classList.remove('active'));
+                document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+
+                const targetPage = document.getElementById(`page${pageNum}`);
+                if (targetPage) {
+                    targetPage.classList.add('active');
+                }
+                const tabBtns = document.querySelectorAll('.tab-btn');
+                if (tabBtns[pageNum - 1]) {
+                    tabBtns[pageNum - 1].classList.add('active');
+                }
+
+                if (pageNum === 2 && !mcqRendered) {
+                    renderMCQ();
+                    mcqRendered = true;
+                }
+                if (pageNum === 3) {
+                    loadSpeechQuestion(currentSpeechIndex);
+                }
+                if (pageNum === 4) {
+                    loadSentence(currentSentIndex);
+                }
+                window.scrollTo({ top: 0, behavior: 'smooth' });
+            } catch (err) {
+                console.error("Page switch error:", err);
+            }
+        }
+
+        // --- Text-to-Speech ---
+        function speakText(text) {
+            try {
+                if ('speechSynthesis' in window) {
+                    window.speechSynthesis.cancel();
+                    const utterance = new SpeechSynthesisUtterance(text);
+                    utterance.lang = 'zh-CN';
+                    utterance.rate = 0.85;
+                    window.speechSynthesis.speak(utterance);
+                } else {
+                    showToast("当前浏览器不支持语音合成朗读");
+                }
+            } catch (err) {
+                console.error("TTS error:", err);
+            }
+        }
+
+        function speakFullDialogue() {
+            const fullText = "你们是第一次来北京吗？是的，我们都是第一次来。你们是来学中文的吗？不是，我们是来旅游的。我这几天都不忙，你们有事就找我。好的，谢谢您。";
+            speakText(fullText);
+        }
+
+        function speakAllVocab() {
+            const allWords = vocabData.map(v => v.word).join("，");
+            speakText(allWords);
+        }
+
+        // --- PAGE 2: MCQ Logic (Unique Options & Accurate Scoring) ---
+        function renderMCQ() {
+            const container = document.getElementById('quizContainer');
+            container.innerHTML = '';
+
+            mcqData.forEach((item, index) => {
+                const card = document.createElement('div');
+                card.className = 'quiz-card';
+
+                // Guarantee no duplicate options within a question
+                const uniqueOpts = Array.from(new Set(item.options));
+                const shuffledOpts = uniqueOpts.sort(() => Math.random() - 0.5);
+
+                const optionsHTML = shuffledOpts.map((opt, optIdx) => {
+                    const letter = String.fromCharCode(65 + optIdx);
+                    const safeVal = opt.replace(/"/g, '&quot;');
+                    return `
+                        <button class="option-btn" data-value="${safeVal}" onclick="selectMCQOption(${index}, this)">
+                            <strong>${letter}.</strong> ${opt}
+                        </button>
+                    `;
+                }).join('');
+
+                card.innerHTML = `
+                    <div class="quiz-title">(${index + 1}) “<span style="color:var(--primary-dark);">${item.word}</span>” 的英文意思是：</div>
+                    <div class="options-grid">${optionsHTML}</div>
+                `;
+                container.appendChild(card);
+            });
+        }
+
+        function selectMCQOption(qIdx, btn) {
+            mcqUserAnswers[qIdx] = btn.getAttribute('data-value');
+            const parent = btn.parentElement;
+            parent.querySelectorAll('.option-btn').forEach(b => b.classList.remove('selected'));
+            btn.classList.add('selected');
+        }
+
+        function checkMCQ() {
+            let correctCount = 0;
+            const total = mcqData.length;
+            const cards = document.querySelectorAll('#quizContainer .quiz-card');
+
+            mcqData.forEach((item, index) => {
+                const card = cards[index];
+                if (!card) return;
+                const btns = card.querySelectorAll('.option-btn');
+                const userAns = mcqUserAnswers[index];
+
+                btns.forEach(btn => {
+                    const val = btn.getAttribute('data-value');
+                    btn.classList.remove('selected', 'correct', 'wrong');
+
+                    if (val === item.correct) {
+                        btn.classList.add('correct');
+                    } else if (userAns === val && userAns !== item.correct) {
+                        btn.classList.add('wrong');
+                    }
+                });
+
+                if (userAns === item.correct) {
+                    correctCount++;
+                }
+            });
+
+            const scoreBanner = document.getElementById('mcqScoreBanner');
+            scoreBanner.style.display = 'block';
+            scoreBanner.innerHTML = `🎯 测试结果：答对 <strong>${correctCount}</strong> / ${total} 题，总积分：<strong>${correctCount} 分</strong>！`;
+
+            if (correctCount === total && typeof confetti === 'function') {
+                confetti({ particleCount: 110, spread: 75, origin: { y: 0.6 } });
+            }
+        }
+
+        function resetMCQ() {
+            mcqUserAnswers = {};
+            document.getElementById('mcqScoreBanner').style.display = 'none';
+            renderMCQ();
+        }
+
+        // --- PAGE 3: Speech Recognition Word Test ---
+        function loadSpeechQuestion(index) {
+            currentSpeechIndex = index;
+            document.getElementById('speechCurrentIdx').innerText = index + 1;
+            document.getElementById('speechTotal').innerText = vocabData.length;
+            document.getElementById('speechPassedCount').innerText = passedWords.size;
+            document.getElementById('speechTargetWord').innerText = vocabData[index].word;
+            document.getElementById('speechPinyinHint').innerText = '';
+            document.getElementById('speechFeedback').innerText = '点击麦克风按钮后，清晰读出上面的汉字...';
+            document.getElementById('speechFeedback').style.color = '#666';
+        }
+
+        function togglePinyinHint() {
+            const hintBox = document.getElementById('speechPinyinHint');
+            const item = vocabData[currentSpeechIndex];
+            hintBox.innerText = hintBox.innerText === '' ? `${item.pinyin} (${item.pos})` : '';
+        }
+
+        function nextSpeechWord() {
+            currentSpeechIndex = (currentSpeechIndex + 1) % vocabData.length;
+            loadSpeechQuestion(currentSpeechIndex);
+        }
+
+        function toggleWordRecognition() {
+            const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+            if (!SpeechRecognition) {
+                showToast("您的浏览器不支持实时语音识别，请使用最新版 Chrome 或 Edge 浏览器。");
+                return;
+            }
+
+            const recBtn = document.getElementById('recordBtn');
+            const feedback = document.getElementById('speechFeedback');
+
+            if (isWordRecording && wordRecognition) {
+                wordRecognition.stop();
+                return;
+            }
+
+            try {
+                wordRecognition = new SpeechRecognition();
+                wordRecognition.lang = 'zh-CN';
+                wordRecognition.interimResults = false;
+                wordRecognition.maxAlternatives = 3;
+
+                wordRecognition.onstart = () => {
+                    isWordRecording = true;
+                    recBtn.classList.add('recording');
+                    recBtn.innerHTML = '🛑 正在聆听... 点击停止';
+                    feedback.innerText = '请大声读出屏幕上的汉字...';
+                    feedback.style.color = 'var(--primary-dark)';
+                };
+
+                wordRecognition.onresult = (event) => {
+                    const target = vocabData[currentSpeechIndex].word;
+                    let matched = false;
+                    let heardText = event.results[0][0].transcript.trim();
+
+                    for (let i = 0; i < event.results[0].length; i++) {
+                        const alt = event.results[0][i].transcript.trim();
+                        if (alt.includes(target) || target.includes(alt)) {
+                            matched = true;
+                            heardText = alt;
+                            break;
+                        }
+                    }
+
+                    if (matched) {
+                        passedWords.add(target);
+                        document.getElementById('speechPassedCount').innerText = passedWords.size;
+                        feedback.innerHTML = `🎉 认读正确！识别结果：“<strong>${heardText}</strong>”`;
+                        feedback.style.color = 'var(--correct-color)';
+                        if (typeof confetti === 'function') {
+                            confetti({ particleCount: 60, spread: 60, origin: { y: 0.7 } });
+                        }
+                    } else {
+                        feedback.innerHTML = `❌ 识别为：“<strong>${heardText}</strong>”，与“${target}”不符，可点击提示查看拼音后重试！`;
+                        feedback.style.color = 'var(--wrong-color)';
+                    }
+                };
+
+                wordRecognition.onerror = () => {
+                    feedback.innerText = '未检测到清晰语音或麦克风权限受限，请重试。';
+                    feedback.style.color = 'var(--wrong-color)';
+                };
+
+                wordRecognition.onend = () => {
+                    isWordRecording = false;
+                    recBtn.classList.remove('recording');
+                    recBtn.innerHTML = '🎤 点击开始朗读';
+                };
+
+                wordRecognition.start();
+            } catch (err) {
+                console.error("SpeechRecognition error:", err);
+                showToast("启动语音识别失败，请检查麦克风权限。");
+            }
+        }
+
+        // --- PAGE 4: Sentence Recording & Playback + Confetti ---
+        function loadSentence(idx) {
+            currentSentIndex = idx;
+            document.getElementById('sentIdxDisplay').innerText = idx + 1;
+            document.getElementById('sentTotalDisplay').innerText = keySentences.length;
+            document.getElementById('sentDoneCount').innerText = completedSentences.size;
+            document.getElementById('targetSentenceBox').innerText = keySentences[idx].cn;
+            document.getElementById('targetSentencePinyin').innerText = keySentences[idx].py;
+
+            const playBtn = document.getElementById('sentPlayBtn');
+            playBtn.disabled = true;
+            playBtn.style.opacity = '0.5';
+            document.getElementById('sentFeedback').innerText = '点击“开始录音”练习朗读句子，录完后可点击“回放我的录音”对比原音。';
+            document.getElementById('sentFeedback').style.color = '#666';
+        }
+
+        function speakCurrentSentence() {
+            speakText(keySentences[currentSentIndex].cn);
+        }
+
+        function nextSentence() {
+            currentSentIndex = (currentSentIndex + 1) % keySentences.length;
+            loadSentence(currentSentIndex);
+        }
+
+        async function toggleSentenceAudioRecord() {
+            const recBtn = document.getElementById('sentRecBtn');
+            const playBtn = document.getElementById('sentPlayBtn');
+            const feedback = document.getElementById('sentFeedback');
+
+            if (isAudioRecording && mediaRecorder) {
+                mediaRecorder.stop();
+                return;
+            }
+
+            if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
+                showToast("当前浏览器不支持录音功能，建议使用最新版 Chrome 或 Edge。");
+                return;
+            }
+
+            try {
+                const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+                audioChunks = [];
+                mediaRecorder = new MediaRecorder(stream);
+
+                mediaRecorder.ondataavailable = event => {
+                    if (event.data.size > 0) audioChunks.push(event.data);
+                };
+
+                mediaRecorder.onstop = () => {
+                    isAudioRecording = false;
+                    recBtn.classList.remove('recording');
+                    recBtn.innerHTML = '⏺️ 重新录音';
+
+                    const audioBlob = new Blob(audioChunks, { type: 'audio/webm' });
+                    const audioUrl = URL.createObjectURL(audioBlob);
+                    const player = document.getElementById('recordedAudioPlayer');
+                    player.src = audioUrl;
+
+                    playBtn.disabled = false;
+                    playBtn.style.opacity = '1';
+
+                    completedSentences.add(currentSentIndex);
+                    document.getElementById('sentDoneCount').innerText = completedSentences.size;
+
+                    if (typeof confetti === 'function') {
+                        confetti({
+                            particleCount: completedSentences.size === keySentences.length ? 150 : 75,
+                            spread: 80,
+                            origin: { y: 0.65 }
+                        });
+                    }
+
+                    if (completedSentences.size === keySentences.length) {
+                        feedback.innerHTML = '🎊 太棒了！你已完成全部 3 个重点句子的朗读练习，圆满通关！';
+                    } else {
+                        feedback.innerHTML = '🌟 录音完成！已为你撒花鼓励，点击“回放我的录音”听听自己的发音吧！';
+                    }
+                    feedback.style.color = 'var(--correct-color)';
+
+                    stream.getTracks().forEach(track => track.stop());
+                };
+
+                mediaRecorder.start();
+                isAudioRecording = true;
+                recBtn.classList.add('recording');
+                recBtn.innerHTML = '⏹️ 停止录音';
+                feedback.innerText = '正在录音中... 请大声朗读上方句子，读完点击“停止录音”。';
+                feedback.style.color = 'var(--primary-dark)';
+            } catch (err) {
+                feedback.innerText = '无法访问麦克风，请在浏览器设置中允许麦克风权限。';
+                feedback.style.color = 'var(--wrong-color)';
+            }
+        }
+
+        function playRecordedSentence() {
+            const player = document.getElementById('recordedAudioPlayer');
+            if (player.src) {
+                player.play().catch(err => console.error("Playback error:", err));
+            }
+        }
+
+        // --- PAGE 5: Voice Q&A with Automatic Grading ---
+        function recordQAAnswer(qNum) {
+            const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+            if (!SpeechRecognition) {
+                showToast("您的浏览器不支持语音识别输入，请使用最新版 Chrome 或 Edge 浏览器。");
+                return;
+            }
+
+            const btn = document.getElementById(`qaRecBtn${qNum}`);
+            const transcriptEl = document.getElementById(`qaTranscript${qNum}`);
+            const scoreTag = document.getElementById(`qaScore${qNum}`);
+            const hintEl = document.getElementById(`qaHint${qNum}`);
+
+            try {
+                const recognition = new SpeechRecognition();
+                recognition.lang = 'zh-CN';
+                recognition.interimResults = false;
+                recognition.maxAlternatives = 3;
+
+                recognition.onstart = () => {
+                    btn.classList.add('recording');
+                    btn.innerHTML = '🛑 正在聆听你的回答...';
+                    transcriptEl.innerText = '请说出你的答案...';
+                    transcriptEl.style.color = 'var(--primary-dark)';
+                };
+
+                recognition.onresult = (event) => {
+                    const spoken = event.results[0][0].transcript.trim();
+                    transcriptEl.innerHTML = `你的回答：“<strong>${spoken}</strong>”`;
+                    transcriptEl.style.color = '#222';
+
+                    let allHeard = [];
+                    for (let i = 0; i < event.results[0].length; i++) {
+                        allHeard.push(event.results[0][i].transcript.trim());
+                    }
+                    const combinedHeard = allHeard.join(" ");
+
+                    let earned = 0;
+                    if (qNum === 1) {
+                        // Question 1: 王一雪这几天忙不忙？ -> 不忙 / 都不忙 / 没忙
+                        if (combinedHeard.includes("不忙") || combinedHeard.includes("都不忙") || combinedHeard.includes("没忙")) {
+                            earned = 50;
+                            hintEl.innerHTML = '✅ 回答正确！参考答案：王一雪这几天都不忙。';
+                            hintEl.style.color = 'var(--correct-color)';
+                        } else {
+                            earned = 0;
+                            hintEl.innerHTML = '❌ 回答不够准确。提示：王一雪说“我这几天都不忙”。';
+                            hintEl.style.color = 'var(--wrong-color)';
+                        }
+                    } else if (qNum === 2) {
+                        // Question 2: 白家月有事可以找谁？ -> 王一雪 / 一雪
+                        if (combinedHeard.includes("王一雪") || combinedHeard.includes("一雪")) {
+                            earned = 50;
+                            hintEl.innerHTML = '✅ 回答正确！参考答案：白家月有事可以找王一雪。';
+                            hintEl.style.color = 'var(--correct-color)';
+                        } else {
+                            earned = 0;
+                            hintEl.innerHTML = '❌ 回答不够准确。提示：有事就找“王一雪”。';
+                            hintEl.style.color = 'var(--wrong-color)';
+                        }
+                    }
+
+                    qaScores[qNum] = earned;
+                    if (earned > 0) {
+                        scoreTag.innerText = `回答正确 (+${earned}分)`;
+                        scoreTag.style.background = '#d4edda';
+                        scoreTag.style.color = '#155724';
+                    } else {
+                        scoreTag.innerText = `需再练习 (0分)`;
+                        scoreTag.style.background = '#f8d7da';
+                        scoreTag.style.color = '#721c24';
+                    }
+
+                    const totalScore = qaScores[1] + qaScores[2];
+                    document.getElementById('qaTotalScoreVal').innerText = totalScore;
+
+                    if (totalScore === 100 && typeof confetti === 'function') {
+                        confetti({ particleCount: 130, spread: 80, origin: { y: 0.6 } });
+                    }
+                };
+
+                recognition.onerror = () => {
+                    transcriptEl.innerText = '语音识别失败或未检测到声音，请重试。';
+                    transcriptEl.style.color = 'var(--wrong-color)';
+                };
+
+                recognition.onend = () => {
+                    btn.classList.remove('recording');
+                    btn.innerHTML = `🎤 重新回答第(${qNum})题`;
+                };
+
+                recognition.start();
+            } catch (err) {
+                console.error("QA recognition error:", err);
+                showToast("语音输入启动失败，请重试。");
+            }
+        }
+    </script>
+</body>
+</html>
